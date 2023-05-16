@@ -14,9 +14,9 @@ eta_0 = sqrt(mu_0/eps_0);
 % Simulation Parameters
 
 % Compute Default Grid Resolution
-lambda = [5e-4 1e-3 1e-2 1e-1]; % Array of wavelengths of interest, in meter
+lambda = [2.3983e-4 33.333333e-5 1e-3 33.333e-4 1e-2 1e-1]; % Array of wavelengths of interest, in meter
 n_max = 3.927; % Maximum refractive index of material in use
-N_lambda = 20; % Resolution of one wavelength in number of cells, typical value: 10
+N_lambda = 16; % Resolution of one wavelength in number of cells, typical value: 10
 
 d_min = 1e-5; % Size of smallest feature of the structure of interest, in meter
 N_d = 6; % Resolution of smallest feature in number of cells, typical value: 4
@@ -26,7 +26,7 @@ dz2 = d_min/N_d;
 dz = min(dz1,dz2);
 
 % Snap Grid to Criticcal Dimensions
-dc = 8e-3; % Critical Dimension
+dc = 2e-3; % Critical Dimension
 N = ceil(dc/dz);
 dz = dc/N;
 Nz = N;
@@ -42,7 +42,7 @@ t_0 = 6*tau; % Delay of Gaussian Source to avoid abrupt change of fields
 
 % Compute Required Simulation Time
 t_prop = n_max*Nz*dz/c_0; % Time it takes for wave to propagate across the grid once
-n_bounce = 5; % Number of bounces of the wave in the simulation
+n_bounce = 10; % Number of bounces of the wave in the simulation
 T_sim = 12*tau + n_bounce*t_prop; % Allow for the entire pulse to propagate, along with allowance for n_bounce number of bounces for the wave
 
 N_Steps = ceil(T_sim/dt);
@@ -52,17 +52,44 @@ eps_r = ones(1,Nz);
 mu_r = ones(1,Nz);
 
 % Insert Material
-n_material_0 = 1.00293;
+n_material_0 = 1.0;
 n_material_1 = 3.927;
 n_material_2 = 1.33;
 n_material_3 = 2.41;
+
 eps_r(:) =  n_material_0^2;
-eps_r(ceil(0.3*Nz):ceil(0.4*Nz)) = n_material_3^2;
-eps_r(ceil(0.4*Nz):ceil(0.5*Nz)) = n_material_2^2;
-eps_r(ceil(0.5*Nz):ceil(0.6*Nz)) = n_material_1^2;
-%eps_r(ceil(0.6*Nz):ceil(0.7*Nz)) = n_material_3^2;
-%eps_r(ceil(0.7*Nz):ceil(0.8*Nz)) = n_material_2^2;
-%eps_r(ceil(0.8*Nz):ceil(0.9*Nz)) = n_material_1^2;
+
+%eps_r(ceil(0.090*Nz):ceil(0.135*Nz)) = n_material_2^2;
+%eps_r(ceil(0.135*Nz):ceil(0.160*Nz)) = n_material_3^2;
+%
+%eps_r(ceil(0.160*Nz):ceil(0.205*Nz)) = n_material_2^2;
+%eps_r(ceil(0.205*Nz):ceil(0.230*Nz)) = n_material_3^2;
+%eps_r(ceil(0.230*Nz):ceil(0.275*Nz)) = n_material_2^2;
+%eps_r(ceil(0.275*Nz):ceil(0.300*Nz)) = n_material_3^2;
+
+eps_r(ceil(0.300*Nz):ceil(0.345*Nz)) = n_material_2^2;
+eps_r(ceil(0.345*Nz):ceil(0.370*Nz)) = n_material_3^2;
+eps_r(ceil(0.370*Nz):ceil(0.415*Nz)) = n_material_2^2;
+eps_r(ceil(0.415*Nz):ceil(0.440*Nz)) = n_material_3^2;
+
+eps_r(ceil(0.440*Nz):ceil(0.485*Nz)) = n_material_2^2;
+eps_r(ceil(0.485*Nz):ceil(0.510*Nz)) = n_material_3^2;
+eps_r(ceil(0.510*Nz):ceil(0.555*Nz)) = n_material_2^2;
+eps_r(ceil(0.555*Nz):ceil(0.580*Nz)) = n_material_3^2;
+
+eps_r(ceil(0.580*Nz):ceil(0.625*Nz)) = n_material_2^2;
+eps_r(ceil(0.625*Nz):ceil(0.650*Nz)) = n_material_3^2;
+eps_r(ceil(0.650*Nz):ceil(0.695*Nz)) = n_material_2^2;
+eps_r(ceil(0.695*Nz):ceil(0.720*Nz)) = n_material_3^2;
+%
+%eps_r(ceil(0.720*Nz):ceil(0.765*Nz)) = n_material_2^2;
+%eps_r(ceil(0.765*Nz):ceil(0.790*Nz)) = n_material_3^2;
+%eps_r(ceil(0.790*Nz):ceil(0.835*Nz)) = n_material_2^2;
+%eps_r(ceil(0.835*Nz):ceil(0.860*Nz)) = n_material_3^2;
+%
+%eps_r(ceil(0.860*Nz):ceil(0.905*Nz)) = n_material_2^2;
+%eps_r(ceil(0.905*Nz):ceil(0.930*Nz)) = n_material_3^2;
+
 
 % Compute Source
 nz_src = 3; % z-index of Source, typically set as the first cell of Total Field region, ie z=3
@@ -71,8 +98,10 @@ t = (0:N_Steps-1)*dt;
 del_t = 0.5*(n_src*dz/c_0 + dt);
 A = -sqrt(eps_r(nz_src)/mu_r(nz_src));
 
-Ey_src = exp(-((t-t_0)/tau).^2);
-Hx_src = A*exp(-((t-t_0+del_t)/tau).^2);
+f_src_passband = 0.625e12;
+
+Ey_src = exp(-((t-t_0)/tau).^2).*cos(2*pi*f_src_passband*(t-t_0));
+Hx_src = A*exp(-((t-t_0+del_t)/tau).^2).*cos(2*pi*f_src_passband*(t-t_0+del_t));
 
 % Source Parameters for calculating Fourier Transforms
 fMax_FFT = 1.0*f_c;
@@ -98,6 +127,24 @@ Hx1 = Hx2 = 0; % z-Low boundary fields
 m_Ey = (c_0*dt)./eps_r;
 m_Hx = (c_0*dt)./mu_r;
 
+
+%% Plot housekeeping
+%% Visualize Steady State Reflectance and Transmittance
+xlim_fft = [0 fMax_FFT*1e-12];
+ylim_fft = [-42 3]
+ylim_fft_2 = [-0.5 0.5];
+ylim_fft_lin = [0. 1.2];
+
+% Set Tick Markings
+xm = [min(xlim_fft)*1e-12:0.25:fMax_FFT*1e-12];
+xt = strtrim(cellstr(num2str(xm','%3.2f'))');
+
+ym = [min(ylim_fft):3:max(ylim_fft)];
+yt = strtrim(cellstr(num2str(ym','%2.1f'))');
+
+
+ym_lin = [min(ylim_fft_lin):0.1:max(ylim_fft_lin)];
+yt_lin = strtrim(cellstr(num2str(ym_lin','%2.1f'))');
 
 %% Main FDTD Loop
 disp("Starting Simulation:");
@@ -156,7 +203,7 @@ for T = 1:N_Steps
 
   % Visualize
   % Update plot every T_plotUpdate steps
-  T_plotUpdate = 50;
+  T_plotUpdate = 500;
   if mod(T,T_plotUpdate) == 0 || T == N_Steps
     clc
     disp("Starting Simulation:");
@@ -164,6 +211,10 @@ for T = 1:N_Steps
     disp(["Progress: ", num2str(T/N_Steps*100), "% (t = ", num2str(T*dt*1e12), " pico-second)"]);
 
     figure(1)
+    imagesc([0 Nz]*dz*1e12/c_0,plotYLim+0.5*[1 -1],1./eps_r)
+    set(gca,'YDir','normal')
+    colormap('Pink')
+    hold on
     h = plot((0:Nz-1)*dz*1e12/c_0,Ey,'-b', 'LineWidth',2);
     hold on
     h = plot((0:Nz-1)*dz*1e12/c_0,Hx,'-r', 'LineWidth',2);
@@ -177,62 +228,39 @@ for T = 1:N_Steps
     set(hParent, 'FontSize', 14, 'LineWidth', 2);
     refresh
 
+
+
+    fig_FFT = figure(2);
+    subplot(311)
+    h = plot(f_FFT*1e-12,10*log10(abs((reflectance_FFT+eps)./source_FFT).^2),'-b', 'LineWidth',2);
+    grid on
+    xlim(xlim_fft)
+    ylim(ylim_fft)
+    xlabel('Frequency (THz)')
+    ylabel('Reflectance R(f) [dB]')
+    set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt, 'YTick',ym, 'YTickLabel',yt);
+
+    subplot(312)
+    h = plot(f_FFT*1e-12,10*log10(abs((transmittance_FFT+eps)./source_FFT).^2),'-r', 'LineWidth',2);
+    grid on
+    xlim(xlim_fft)
+    ylim(ylim_fft)
+    xlabel('Frequency (THz)')
+    ylabel('Transmittance T(f) [dB]')
+    set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt, 'YTick',ym, 'YTickLabel',yt);
+
+    subplot(313)
+    h = plot(f_FFT*1e-12,(abs(reflectance_FFT./source_FFT).^2+abs(transmittance_FFT./source_FFT).^2),'-k', 'LineWidth',2);
+    grid on
+    xlim(xlim_fft)
+    ylim(ylim_fft_lin)
+    xlabel('Frequency (THz)')
+    ylabel('R(f)+T(f) [Linear]')
+    set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt);
+
+    refresh
+
+
   endif
 
-
-
 endfor
-
-% Finalize Fourier Transform
-reflectance_FFT = reflectance_FFT*dt;
-transmittance_FFT = transmittance_FFT*dt;
-source_FFT = source_FFT*dt;
-
-% Normalize Fourier Transforms wrt Source Spectrum
-reflectance_FFT = abs(reflectance_FFT./source_FFT).^2;
-transmittance_FFT = abs(transmittance_FFT./source_FFT).^2
-
-
-%% Visualize Steady State Reflectance and Transmittance
-xlim_fft = [0 fMax_FFT*1e-12];
-ylim_fft = [-30 3]
-ylim_fft_2 = [-0.5 0.5];
-
-% Set Tick Markings
-xm = [min(xlim_fft)*1e-12:0.25:fMax_FFT*1e-12];
-xt = strtrim(cellstr(num2str(xm','%3.2f'))');
-
-ym = [min(ylim_fft):3:max(ylim_fft)];
-yt = strtrim(cellstr(num2str(ym','%2.1f'))');
-
-
-fig_FFT = figure(2);
-
-subplot(311)
-h = plot(f_FFT*1e-12,10*log10(reflectance_FFT),'-b', 'LineWidth',2);
-grid on
-xlim(xlim_fft)
-ylim(ylim_fft)
-xlabel('Frequency (THz)')
-ylabel('Reflectance R(f) [dB]')
-set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt, 'YTick',ym, 'YTickLabel',yt);
-
-subplot(312)
-h = plot(f_FFT*1e-12,10*log10(transmittance_FFT),'-r', 'LineWidth',2);
-grid on
-xlim(xlim_fft)
-ylim(ylim_fft)
-xlabel('Frequency (THz)')
-ylabel('Transmittance T(f) [dB]')
-set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt, 'YTick',ym, 'YTickLabel',yt);
-
-subplot(313)
-h = plot(f_FFT*1e-12,10*log10(reflectance_FFT+transmittance_FFT),'-k', 'LineWidth',2);
-grid on
-xlim(xlim_fft)
-ylim(ylim_fft_2)
-xlabel('Frequency (THz)')
-ylabel('R(f)+T(f) [dB]')
-set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt);
-
-

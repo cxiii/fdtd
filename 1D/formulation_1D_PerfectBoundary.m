@@ -59,13 +59,13 @@ n_material_3 = 2.41;
 
 eps_r(:) =  n_material_0^2;
 
-%eps_r(ceil(0.090*Nz):ceil(0.135*Nz)) = n_material_2^2;
-%eps_r(ceil(0.135*Nz):ceil(0.160*Nz)) = n_material_3^2;
-%
-%eps_r(ceil(0.160*Nz):ceil(0.205*Nz)) = n_material_2^2;
-%eps_r(ceil(0.205*Nz):ceil(0.230*Nz)) = n_material_3^2;
-%eps_r(ceil(0.230*Nz):ceil(0.275*Nz)) = n_material_2^2;
-%eps_r(ceil(0.275*Nz):ceil(0.300*Nz)) = n_material_3^2;
+eps_r(ceil(0.090*Nz):ceil(0.135*Nz)) = n_material_2^2;
+eps_r(ceil(0.135*Nz):ceil(0.160*Nz)) = n_material_3^2;
+
+eps_r(ceil(0.160*Nz):ceil(0.205*Nz)) = n_material_2^2;
+eps_r(ceil(0.205*Nz):ceil(0.230*Nz)) = n_material_3^2;
+eps_r(ceil(0.230*Nz):ceil(0.275*Nz)) = n_material_2^2;
+eps_r(ceil(0.275*Nz):ceil(0.300*Nz)) = n_material_3^2;
 
 eps_r(ceil(0.300*Nz):ceil(0.345*Nz)) = n_material_2^2;
 eps_r(ceil(0.345*Nz):ceil(0.370*Nz)) = n_material_3^2;
@@ -81,14 +81,14 @@ eps_r(ceil(0.580*Nz):ceil(0.625*Nz)) = n_material_2^2;
 eps_r(ceil(0.625*Nz):ceil(0.650*Nz)) = n_material_3^2;
 eps_r(ceil(0.650*Nz):ceil(0.695*Nz)) = n_material_2^2;
 eps_r(ceil(0.695*Nz):ceil(0.720*Nz)) = n_material_3^2;
-%
-%eps_r(ceil(0.720*Nz):ceil(0.765*Nz)) = n_material_2^2;
-%eps_r(ceil(0.765*Nz):ceil(0.790*Nz)) = n_material_3^2;
-%eps_r(ceil(0.790*Nz):ceil(0.835*Nz)) = n_material_2^2;
-%eps_r(ceil(0.835*Nz):ceil(0.860*Nz)) = n_material_3^2;
-%
-%eps_r(ceil(0.860*Nz):ceil(0.905*Nz)) = n_material_2^2;
-%eps_r(ceil(0.905*Nz):ceil(0.930*Nz)) = n_material_3^2;
+
+eps_r(ceil(0.720*Nz):ceil(0.765*Nz)) = n_material_2^2;
+eps_r(ceil(0.765*Nz):ceil(0.790*Nz)) = n_material_3^2;
+eps_r(ceil(0.790*Nz):ceil(0.835*Nz)) = n_material_2^2;
+eps_r(ceil(0.835*Nz):ceil(0.860*Nz)) = n_material_3^2;
+
+eps_r(ceil(0.860*Nz):ceil(0.905*Nz)) = n_material_2^2;
+eps_r(ceil(0.905*Nz):ceil(0.930*Nz)) = n_material_3^2;
 
 
 % Compute Source
@@ -98,14 +98,14 @@ t = (0:N_Steps-1)*dt;
 del_t = 0.5*(n_src*dz/c_0 + dt);
 A = -sqrt(eps_r(nz_src)/mu_r(nz_src));
 
-f_src_passband = 0.625e12;
+f_src_passband = 0;
 
 Ey_src = exp(-((t-t_0)/tau).^2).*cos(2*pi*f_src_passband*(t-t_0));
 Hx_src = A*exp(-((t-t_0+del_t)/tau).^2).*cos(2*pi*f_src_passband*(t-t_0+del_t));
 
 % Source Parameters for calculating Fourier Transforms
 fMax_FFT = 1.0*f_c;
-N_FFT = 2048;
+N_FFT = 256;
 f_FFT = linspace(0,fMax_FFT,N_FFT);
 
 % Initialize Fourier Transforms
@@ -131,9 +131,9 @@ m_Hx = (c_0*dt)./mu_r;
 %% Plot housekeeping
 %% Visualize Steady State Reflectance and Transmittance
 xlim_fft = [0 fMax_FFT*1e-12];
-ylim_fft = [-42 3]
+ylim_fft = [-51 0]
 ylim_fft_2 = [-0.5 0.5];
-ylim_fft_lin = [0. 1.2];
+ylim_fft_lin = [0.85 1.15];
 
 % Set Tick Markings
 xm = [min(xlim_fft)*1e-12:0.25:fMax_FFT*1e-12];
@@ -143,8 +143,8 @@ ym = [min(ylim_fft):3:max(ylim_fft)];
 yt = strtrim(cellstr(num2str(ym','%2.1f'))');
 
 
-ym_lin = [min(ylim_fft_lin):0.1:max(ylim_fft_lin)];
-yt_lin = strtrim(cellstr(num2str(ym_lin','%2.1f'))');
+ym_lin = [min(ylim_fft_lin):0.05:max(ylim_fft_lin)];
+yt_lin = strtrim(cellstr(num2str(ym_lin','%2.2f'))');
 
 %% Main FDTD Loop
 disp("Starting Simulation:");
@@ -203,7 +203,7 @@ for T = 1:N_Steps
 
   % Visualize
   % Update plot every T_plotUpdate steps
-  T_plotUpdate = 500;
+  T_plotUpdate = 250;
   if mod(T,T_plotUpdate) == 0 || T == N_Steps
     clc
     disp("Starting Simulation:");
@@ -231,26 +231,21 @@ for T = 1:N_Steps
 
 
     fig_FFT = figure(2);
-    subplot(311)
-    h = plot(f_FFT*1e-12,10*log10(abs((reflectance_FFT+eps)./source_FFT).^2),'-b', 'LineWidth',2);
+    subplot(211)
+    h = plot(f_FFT*1e-12,10*log10(abs((reflectance_FFT)./source_FFT).^2),'-b', 'LineWidth',2);
+    hold on
+    h = plot(f_FFT*1e-12,10*log10(abs((transmittance_FFT)./source_FFT).^2),'-r', 'LineWidth',2);
+    hold off
     grid on
     xlim(xlim_fft)
     ylim(ylim_fft)
+    legend('Reflectance', 'Transmittance')
     xlabel('Frequency (THz)')
-    ylabel('Reflectance R(f) [dB]')
+    ylabel('Energy [dB]')
     set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt, 'YTick',ym, 'YTickLabel',yt);
 
-    subplot(312)
-    h = plot(f_FFT*1e-12,10*log10(abs((transmittance_FFT+eps)./source_FFT).^2),'-r', 'LineWidth',2);
-    grid on
-    xlim(xlim_fft)
-    ylim(ylim_fft)
-    xlabel('Frequency (THz)')
-    ylabel('Transmittance T(f) [dB]')
-    set(get(h,'Parent'), 'FontSize', 14, 'LineWidth', 2, 'XTick',xm, 'XTickLabel',xt, 'YTick',ym, 'YTickLabel',yt);
-
-    subplot(313)
-    h = plot(f_FFT*1e-12,(abs(reflectance_FFT./source_FFT).^2+abs(transmittance_FFT./source_FFT).^2),'-k', 'LineWidth',2);
+    subplot(212)
+    h = plot(f_FFT*1e-12,(abs(reflectance_FFT./source_FFT).^2+abs(transmittance_FFT./source_FFT).^2),'.k', 'LineWidth',2);
     grid on
     xlim(xlim_fft)
     ylim(ylim_fft_lin)
